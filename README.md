@@ -7,8 +7,12 @@ Designed for real-time payment validation, processing, external provider integra
 ---
 
 # 📌 1. **System Architecture**
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/4c41138d-2774-4ff2-a42c-ca8946cefdb1"
+       alt="System Architecture Diagram"
+       width="70%">
+</p>
 
-<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/4c41138d-2774-4ff2-a42c-ca8946cefdb1" />
 
 
 > The diagram represents a fully distributed microservices architecture with layered security, caching, AWS infrastructure, and external provider integration.
@@ -89,8 +93,12 @@ Designed for real-time payment validation, processing, external provider integra
 ---
 
 # 📌 4. **API Flow Diagram**
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/b78de9b5-30d6-4a88-9e0b-c83f64c1b50c"
+       alt="API Flow Diagram"
+       width="70%">
+</p>
 
-<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/b78de9b5-30d6-4a88-9e0b-c83f64c1b50c" />
 
 ---
 
@@ -173,5 +181,6 @@ If you have any questions, suggestions, or would like to collaborate, feel free 
 This project was designed and developed by **Vaibhav Chougule** as part of a microservices-based distributed payment processing system focusing on scalability, security, and real-time financial transaction handling.
 
 © 2025 Vaibhav Chougule — All Rights Reserved.
+
 
 
