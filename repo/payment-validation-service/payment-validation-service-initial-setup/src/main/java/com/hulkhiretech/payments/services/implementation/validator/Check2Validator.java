@@ -12,6 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 public class Check2Validator implements Validator {
 
 	@Override
+	public String getRuleName() {
+	    return "CHECK2_VALIDATOR_RULE";
+	}
+	
+	@Override
 	public void validate(PaymentRequest request) {
 		log.info("Validating payment request: {}", request);
 	}

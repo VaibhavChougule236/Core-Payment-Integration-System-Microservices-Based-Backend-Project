@@ -2,6 +2,7 @@ package com.hulkhiretech.payments.services.implementation;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
@@ -30,11 +31,14 @@ public class HMacSHA256ServiceImpl implements HMacSHA256Service {
 	
 	@Value("${merchant.client.id}")
 	private String clientId;
+	
+	@Value("${hmac.secret.key}")
+	private String secretKey;
 
 	@Override
 	public String generateHMacSHA256Signeture(String jsonData) {
 
-		String secretKey = "THIS_IS_MY_SECRETE_KEY";
+		
 		String signature = null;
 
 		try {
@@ -54,29 +58,36 @@ public class HMacSHA256ServiceImpl implements HMacSHA256Service {
 	}
 
 	@Override
-	public void verifyHMacSHA256(String incomingHmacSignature, PaymentRequest paymentRequest) {
-		log.info("Verifying HMAC SHA256 signature for payment request: {}", paymentRequest);
+	public void verifyHMacSHA256(
+	        String incomingHmacSignature,
+	        String rawBody) {
 
-		if (incomingHmacSignature == null || incomingHmacSignature.isEmpty()) {
-			log.error("Incoming HMAC signature is null or empty");
+	    log.info("Verifying HMAC signature: {}",
+	            incomingHmacSignature);
 
-			throw new ValidationException(ErrorEnum.MISSING_HMAC_SIGNATURE.getErrorCode(),
-					ErrorEnum.MISSING_HMAC_SIGNATURE.getErrorMessage());
-		}
-		log.info("Verifying HMAC signature: {}", incomingHmacSignature);
+	    if (incomingHmacSignature == null
+	            || incomingHmacSignature.isBlank()) {
 
-		String jsonReq = gson.toJson(paymentRequest);
+	        throw new ValidationException(
+	                ErrorEnum.MISSING_HMAC_SIGNATURE.getErrorCode(),
+	                ErrorEnum.MISSING_HMAC_SIGNATURE.getErrorMessage());
+	    }
 
-		String generatedHmacSignature = generateHMacSHA256Signeture(jsonReq);
-		log.info("Generated HMAC signature: {}", generatedHmacSignature);
-		if (!incomingHmacSignature.equals(generatedHmacSignature)) {
-			log.error("HMAC signature verification failed. " + "incomingHmacSignature: {}, generatedHmacSignature: {}",
-					incomingHmacSignature, generatedHmacSignature);
+	    String generatedHmacSignature =
+	            generateHMacSHA256Signeture(rawBody);
 
-			throw new ValidationException(ErrorEnum.INVALID_HMAC_SIGNATURE.getErrorCode(),
-					ErrorEnum.INVALID_HMAC_SIGNATURE.getErrorMessage());
-		}
-		log.info("HMAC signature verification successful");
+	    log.info("Generated HMAC signature: {}",
+	            generatedHmacSignature);
+
+	    if (!incomingHmacSignature.equals(
+	            generatedHmacSignature)) {
+
+	        throw new ValidationException(
+	                ErrorEnum.INVALID_HMAC_SIGNATURE.getErrorCode(),
+	                ErrorEnum.INVALID_HMAC_SIGNATURE.getErrorMessage());
+	    }
+
+	    log.info("HMAC validation successful");
 	}
 
 	@Override

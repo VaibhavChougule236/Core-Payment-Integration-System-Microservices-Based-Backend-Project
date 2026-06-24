@@ -1,72 +1,88 @@
 package com.hulkhiretech.payments.services.implementation;
 
-import com.hulkhiretech.payments.constant.ValidatorEnum;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.hulkhiretech.payments.factory.ValidatorFactory;
 import com.hulkhiretech.payments.pojo.req.PaymentRequest;
 import com.hulkhiretech.payments.pojo.res.PaymentResponse;
 import com.hulkhiretech.payments.services.interfaces.PaymentService;
 import com.hulkhiretech.payments.services.interfaces.Validator;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Service;
-
-import java.util.UUID;
-
-
+@RequiredArgsConstructor
 @Service
 @Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
-	@Value("${validator.rules}")
-	private String validationRules;
+    @Value("${validator.rules}")
+    private String validationRules;
 
-	private ApplicationContext applicationContext;
+    private final ValidatorFactory validatorFactory;
 
-	public PaymentServiceImpl(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
-	}
+    @Override
+    public PaymentResponse createPayment(PaymentRequest paymentDetails) {
 
-	@Override
-	public PaymentResponse createPayment(PaymentRequest paymentDetails) {
-		log.info("Received payment details: {}", paymentDetails);
+        log.info("Received payment request");
 
-		// TODO Auto-generated method stub
-		// TOMORROW coding Validation Framework.
+        String[] rules = validationRules.split(",");
 
-		// Split the validation rules and process each validator
-		String[] rules = validationRules.split(",");
-		for (String rule : rules) {
-			log.info("Applying validation rule: {}", rule);
+        for (String rule : rules) {
 
-//			Class<? extends Validator> validatorClass = 
-//					ValidatorEnum.getValidatorClassByName(rule);
-//			
-			Class<? extends Validator> validatorClass = ValidatorEnum.getValidatorClassByName(rule);
-			Validator validatorBean = null;
-			if (validatorClass != null) {
-				validatorBean = applicationContext.getBean(validatorClass);
-			}
+            rule = rule.trim();
 
-			if (validatorBean == null || validatorClass == null) {
-				log.warn("Validator not found for rule: {}", rule);
-				continue; // Skip if validator not found
-			}
-			
+            log.info("Applying validation rule: {}", rule);
 
-			log.info("Validator bean retrieved: {}", validatorBean.getClass().getSimpleName());
-			validatorBean.validate(paymentDetails);
+            Validator validator =
+                    validatorFactory.getValidator(rule);
 
-		}
+            if (validator == null) {
 
-		// TODO this is temporary, replace with actual functional values.
-		PaymentResponse paymentResponse = new PaymentResponse();
-		paymentResponse.setId("12345");
-		paymentResponse.setRedirectUrl("https://example.com/redirect?paymentId=" + paymentResponse.getId());
+                log.warn(
+                        "Validator not found for rule: {}",
+                        rule);
 
-		log.info("Payment response created: {}", paymentResponse);
-		return paymentResponse;
-	}
+                continue;
+            }
+
+            log.info(
+                    "Executing validator: {}",
+                    validator.getClass().getSimpleName());
+
+            validator.validate(paymentDetails);
+        }
+
+        PaymentResponse paymentResponse =
+                new PaymentResponse();
+
+        String paymentId =
+                UUID.randomUUID().toString();
+
+        paymentResponse.setId(paymentId);
+
+        paymentResponse.setStatus("VALIDATED");
+
+        paymentResponse.setProvider(
+                paymentDetails.getProvider());
+
+        paymentResponse.setAmount(
+                paymentDetails.getAmount());
+
+        paymentResponse.setCurrency(
+                paymentDetails.getCurrency());
+
+        paymentResponse.setRedirectUrl(
+                "https://example.com/redirect?paymentId="
+                        + paymentId);
+
+        log.info(
+                "Validation completed successfully. PaymentId={}",
+                paymentId);
+
+        return paymentResponse;
+    }
 }

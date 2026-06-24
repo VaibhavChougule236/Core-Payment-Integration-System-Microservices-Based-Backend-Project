@@ -11,22 +11,26 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class Check1Validator implements Validator {
-
-    @Override
-    public String getRuleName() {
-        return "CHECK1_VALIDATOR_RULE";
-    }
+public class InvalidHmacValidator implements Validator {
+	
+	@Override
+	public String getRuleName() {
+	    return "INVALID_HMAC_SIGNATURE";
+	}
 
     @Override
     public void validate(PaymentRequest paymentRequest) {
 
-        if (paymentRequest.getCustomerId() == null
-                || paymentRequest.getCustomerId().isBlank()) {
+        log.info("Executing InvalidHmacValidator");
+
+        if (paymentRequest == null) {
+            log.error("Payment request is null");
 
             throw new ValidationException(
-                    ErrorEnum.MISSING_CUSTOMER_ID.getErrorCode(),
-                    ErrorEnum.MISSING_CUSTOMER_ID.getErrorMessage());
+                    ErrorEnum.INVALID_HMAC_SIGNATURE.getErrorCode(),
+                    ErrorEnum.INVALID_HMAC_SIGNATURE.getErrorMessage());
         }
+
+        log.info("InvalidHmacValidator validation completed successfully");
     }
 }

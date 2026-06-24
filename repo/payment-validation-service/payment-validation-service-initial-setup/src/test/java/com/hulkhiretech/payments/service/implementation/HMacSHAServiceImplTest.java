@@ -1,5 +1,7 @@
 package com.hulkhiretech.payments.service.implementation;
 
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
@@ -20,7 +22,7 @@ private Gson gson = new Gson();
 		log.info("This is a test method in HMacSHA256ServiceImplTest");
 		
 		PaymentRequest request = new PaymentRequest();
-        request.setAmount("100.00");
+        request.setAmount(new BigDecimal("100.00"));
         request.setCurrency("EUR");
         request.setPaymentMethod("CARD");
         request.setPaymentType("SALE");
