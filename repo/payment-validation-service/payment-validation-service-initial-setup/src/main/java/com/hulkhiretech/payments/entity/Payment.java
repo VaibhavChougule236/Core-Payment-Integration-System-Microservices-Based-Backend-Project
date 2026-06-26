@@ -1,5 +1,6 @@
 package com.hulkhiretech.payments.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
@@ -16,7 +17,7 @@ public class Payment {
     
     private Long id;
 
-    private String amount;
+    private BigDecimal amount;
     private String currency;
     private String paymentMethod;
     private String paymentType;

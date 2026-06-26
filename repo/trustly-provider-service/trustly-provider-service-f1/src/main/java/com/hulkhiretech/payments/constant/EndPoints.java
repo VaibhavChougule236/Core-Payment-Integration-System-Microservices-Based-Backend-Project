@@ -15,5 +15,7 @@ public class EndPoints {
 	public static final String FAIL_PAYMENT = "/fail/{paymentId}";
 
 	public static final String V1_TRUSTLY_DEPOSITS = "/v1/trustly/deposits";
+	
+	public static final String NOTIFICATION="/notification";
 
 }

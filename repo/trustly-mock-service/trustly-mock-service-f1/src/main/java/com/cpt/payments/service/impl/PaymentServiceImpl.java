@@ -8,6 +8,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.cpt.payments.constant.Constants;
 import com.cpt.payments.constant.ErrorCodeEnum;
@@ -15,7 +17,7 @@ import com.cpt.payments.exception.TrustlyMockException;
 import com.cpt.payments.http.HttpRequest;
 import com.cpt.payments.http.HttpRestTemplateEngine;
 import com.cpt.payments.pojo.request.CoreTrustlyProvider;
-import com.cpt.payments.pojo.request.TrustlyNotificationRequest;
+import com.cpt.payments.pojo.request.NotificationRequest;
 import com.cpt.payments.pojo.response.ResponseData;
 import com.cpt.payments.pojo.response.Result;
 import com.cpt.payments.pojo.response.TrustlyCoreResponse;
@@ -31,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
-	private static final String SUCCESS = "SUCCESS";
+	private static final String SUCCESS_STRING = "SUCCESS";
 
 	@Value("${trustly.initiate.payment.url}")
 	private String initiatePaymentUrl;
@@ -53,6 +55,10 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Autowired
 	PaymentServiceHelper serviceHelper;
+	
+	private static final String SUCCESS = "SUCCESS";
+
+	private final Map<String, String> paymentTxnMap = new ConcurrentHashMap<>();
 
 	@Override
 	public TrustlyCoreResponse initiatePayment(CoreTrustlyProvider trustlyProviderRequest) {
@@ -85,10 +91,17 @@ public class PaymentServiceImpl implements PaymentService {
 
 		String paymentId = UUID.randomUUID().toString();
 
+		String txnReference =
+		        trustlyProviderRequest.getParams()
+		                              .getData()
+		                              .getMessageID();
+
+		paymentTxnMap.put(paymentId, txnReference);
+
 		ResponseData responseData = ResponseData.builder()
-				.orderid(paymentId)
-				.url(initiatePaymentUrl + paymentId)
-				.build();
+		        .orderid(paymentId)
+		        .url(initiatePaymentUrl + paymentId)
+		        .build();
 
 
 		String signature = serviceHelper.prepareSignature(requestUUID, responseData);
@@ -108,33 +121,59 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public void processPayment(String paymentId, String status) {
 
-		TrustlyNotificationRequest trustlyNotificationRequest = TrustlyNotificationRequest.builder()
-				.paymentId(paymentId).status(status).build();
-		if (SUCCESS.equalsIgnoreCase(status)) {
-			trustlyNotificationRequest.setCode("AC001");
-			trustlyNotificationRequest.setMessage("Transaction succeded");
-		} else {
-			trustlyNotificationRequest.setCode("FL001");
-			trustlyNotificationRequest.setMessage("Transaction Failed");
-		}
-		LogMessage.log(log, " trustlyNotificationRequest is -> " + trustlyNotificationRequest);
+	    String txnReference = paymentTxnMap.get(paymentId);
 
-		Gson gson = new Gson();
-		try {
-			String signature = signatureCreator.generateSignature(gson.toJson(trustlyNotificationRequest));
-			HttpHeaders headers = new HttpHeaders();
-			headers.add("signature", signature);
+	    if (txnReference == null) {
+	        LogMessage.log(log,
+	                "No txnReference found for paymentId : " + paymentId);
+	        return;
+	    }
 
-			HttpRequest httpRequest = HttpRequest.builder().headers(headers)
-					.request(gson.toJson(trustlyNotificationRequest)).httpMethod(HttpMethod.POST)
-					.url(notificationPaymentUrl).build();
+	    NotificationRequest notificationRequest = NotificationRequest.builder()
+	            .txnReference(txnReference)
+	            .providerReference(paymentId)
+	            .txnStatus(status)
+	            .build();
 
-			httpRestTemplateEngine.execute(httpRequest);
+	    if (SUCCESS.equalsIgnoreCase(status)) {
+	        notificationRequest.setErrorCode("AC001");
+	        notificationRequest.setErrorMessage("Transaction Succeeded");
+	    } else {
+	        notificationRequest.setErrorCode("FL001");
+	        notificationRequest.setErrorMessage("Transaction Failed");
+	    }
 
-		} catch (Exception e) {
-			LogMessage.log(log, "EXception while creating signature ");
-		}
+	    LogMessage.log(log,
+	            "Notification Request : " + notificationRequest);
 
+	    Gson gson = new Gson();
+
+	    try {
+
+	        String json = gson.toJson(notificationRequest);
+
+	        String signature =
+	                signatureCreator.generateSignature(json);
+
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.add("signature", signature);
+
+	        HttpRequest httpRequest = HttpRequest.builder()
+	                .headers(headers)
+	                .request(json)
+	                .httpMethod(HttpMethod.POST)
+	                .url(notificationPaymentUrl)
+	                .build();
+
+	        httpRestTemplateEngine.execute(httpRequest);
+
+	    } catch (Exception e) {
+
+	        LogMessage.log(log,
+	                "Exception while sending notification : "
+	                        + e.getMessage());
+
+	    }
 	}
 
 }

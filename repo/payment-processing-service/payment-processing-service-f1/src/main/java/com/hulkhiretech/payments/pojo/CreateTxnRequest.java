@@ -2,20 +2,38 @@ package com.hulkhiretech.payments.pojo;
 
 import java.math.BigDecimal;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class CreateTxnRequest {
 
-    private int userId;
+	@NotNull
+	@Positive
+	private Integer userId;
 
-    private String paymentMethod;
-    private String provider;
-    private String paymentType;
-    
-    private BigDecimal amount;
-    private String currency;
+	@NotBlank
+	private String provider;
 
-    private String merchantTransactionReference;
+	@NotBlank
+	private String paymentMethod;
+
+	@NotBlank
+	private String paymentType;
+
+	@NotNull
+	@DecimalMin("1.00")
+	private BigDecimal amount;
+
+	@NotBlank
+	@Size(min=3,max=3)
+	private String currency;
+
+	@NotBlank
+	private String merchantTransactionReference;
     
 }

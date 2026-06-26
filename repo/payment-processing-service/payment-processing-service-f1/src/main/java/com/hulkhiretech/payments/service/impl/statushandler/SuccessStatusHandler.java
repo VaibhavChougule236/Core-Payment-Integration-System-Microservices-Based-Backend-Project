@@ -15,29 +15,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class SuccessStatusHandler implements TransactionStatusHandler {
-		private final TransactionDao transactionDao;
-		
-		private final ModelMapper modelMapper;
-		
-		@Override
-		public TransactionDTO handleTransactionStatus(TransactionDTO transactionDTO) {
-			log.info("Handling transaction status for DTO: {}", transactionDTO);
-			
-			TransactionEntity entity = modelMapper.map(transactionDTO, 
-	        		TransactionEntity.class);
-			
-			boolean isCreated = transactionDao.createTransaction(entity);
-			log.info("Transaction created: {}", isCreated);
-			
-			if (!isCreated) {
-				log.error("Failed to create transaction in database");
-				throw new RuntimeException("Transaction creation failed");
-			}
-			
-			log.info("Transaction successfully created in database, transactionDTO:{}",
-					transactionDTO);
-			
-			return transactionDTO;
-	}
 
+    private final TransactionDao transactionDao;
+
+    private final ModelMapper modelMapper;
+
+    @Override
+    public TransactionDTO handleTransactionStatus(TransactionDTO transactionDTO) {
+
+        log.info("Handling SUCCESS status for transaction: {}",
+                transactionDTO.getTxnReference());
+
+        TransactionEntity entity =
+                modelMapper.map(transactionDTO,
+                        TransactionEntity.class);
+
+        boolean updated =
+                transactionDao.updateTransaction(entity);
+
+        if (!updated) {
+            log.error("Failed to update transaction {}",
+                    transactionDTO.getTxnReference());
+
+            throw new RuntimeException(
+                    "Unable to update transaction status to SUCCESS");
+        }
+
+        log.info("Transaction updated successfully.");
+
+        return transactionDTO;
+    }
 }
