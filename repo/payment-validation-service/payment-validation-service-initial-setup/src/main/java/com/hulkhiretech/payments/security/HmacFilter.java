@@ -119,6 +119,20 @@ public class HmacFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String path = request.getServletPath();
+
+        return path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/actuator")
+                || path.startsWith("/prometheus")
+                || path.startsWith("/favicon.ico")
+                || path.startsWith("/error");
+    }
+    
+    
+    @Override
     protected void doFilterInternal(
             HttpServletRequest requestRef,
             HttpServletResponse response,

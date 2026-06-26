@@ -36,7 +36,9 @@ public class SecurityConfiguration {
 				.addFilterAfter(new HmacFilter(hMacSHA256Service), LogoutFilter.class) // Ensure HmacFilter runs after
 																						// LogoutFilter)
 
-				.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/actuator/**")
+						.permitAll().anyRequest().authenticated())
 
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
