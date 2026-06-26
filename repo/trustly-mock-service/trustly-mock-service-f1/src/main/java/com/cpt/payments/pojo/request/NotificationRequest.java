@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TrustlyNotificationRequest {
-	private String paymentId;
-	private String status;
-	private String code;
-	private String message;
+public class NotificationRequest {
+	private String txnReference;
+	private String providerReference;
+	private String txnStatus;
+	private String errorCode;
+	private String errorMessage;
 }
