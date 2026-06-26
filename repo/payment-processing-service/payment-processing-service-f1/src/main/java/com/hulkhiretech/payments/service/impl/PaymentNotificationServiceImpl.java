@@ -32,6 +32,8 @@ public class PaymentNotificationServiceImpl implements PaymentNotificationServic
 
         log.info("Received notification : {}", request);
 
+        log.info("txnStatus = {}", request.getTxnStatus());
+        
         TransactionEntity entity =
                 transactionDao.getTransactionByReference(
                         request.getTxnReference());

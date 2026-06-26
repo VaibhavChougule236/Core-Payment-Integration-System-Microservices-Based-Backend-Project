@@ -15,7 +15,7 @@ public class NotificationRequest {
 
     private String providerReference;
 
-    private String status;
+    private String txnStatus;
 
     private String errorCode;
 
